@@ -1,23 +1,35 @@
 import discord, json
+from aiohttp import request
+from discord.ext import commands
 
-intents = discord.Intents.default()
 
 with open("token.json") as token:
     token = json.load(token)
 
-client = discord.Client()
+intents = discord.Intents.default()
 
-@client.event
+bot = commands.Bot(command_prefix="!")
+
+#client = discord.Client()
+
+@bot.event
 async def on_ready():
-    print ('We have logged in as {0.user}'.format(client))
+    print ('We have logged in as {0.user}'.format(bot))
 
-@client.event
-async def on_message(message):
-    if message.author == client.user:
-        return
+@bot.command()
+async def ping(ctx):
+	await ctx.channel.send("pong")
 
-    if message.content.startswith('!hello'):
-        await message.channel.send('Hello!')
+@bot.command(name = "fact")
+async def animal_fact(ctx):
+    URL = "https://some-random-api.ml/animal/dog"
+    
+    async with request("GET", URL, headers=[]) as response:
+        if response.status == 200:
+            data = await response.json()
+            await ctx.send(data["fact"])
 
-client.run(token)
+        else: 
+            await ctx.send(f"API returned a {response.status} status.")
 
+bot.run(token)
